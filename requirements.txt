@@ -1,0 +1,5 @@
+# Las mismas dependencias de pyproject.toml, para instalar sin empaquetar:
+#   python -m pip install -r requirements.txt
+trafilatura>=2.0
+feedparser>=6.0
+tzdata

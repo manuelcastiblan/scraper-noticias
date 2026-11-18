@@ -21,6 +21,9 @@ py -m venv .venv
 .venv\Scripts\python -m scraper_noticias --pais CO --buscar "Primo Gay"
 ```
 
+Si no quieres instalar el paquete, alcanza con las dependencias:
+`python -m pip install -r requirements.txt` y correrlo desde la carpeta del repo.
+
 | Opción | Qué hace |
 |---|---|
 | `--buscar "a,b"` | Exporta solo lo que mencione alguno de los términos (título o cuerpo) |
