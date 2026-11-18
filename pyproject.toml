@@ -1,7 +1,7 @@
 [project]
 name = "scraper-noticias"
 version = "0.1.0"
-description = "Scraper de noticias por RSS y sitemaps, con extracción del cuerpo y filtro temático"
+description = "Scraper de noticias de tema libre por RSS y sitemaps, con extracción del cuerpo y búsqueda"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = ["trafilatura>=2.0", "feedparser>=6.0", "tzdata"]

@@ -23,7 +23,7 @@ class Candidato:
     origen: str                    # RSS | SITEMAP | GNEWS
     publicado: datetime | None
     fecha_fiable: bool = True      # False si viene de <lastmod> (cambia al editar la nota)
-    filtrar: bool = False
+    pais: str = ""
 
     @property
     def fecha(self) -> date | None:
@@ -118,7 +118,7 @@ def descubrir_fuente(m: Medio, f: Fuente, red: Red, desde: date, hasta: date, tz
                 if not filas:
                     break
                 for link, tit, pub in filas:
-                    crudos.append(Candidato(link, tit, m.nombre, m.categoria, "RSS", pub, True, m.filtrar))
+                    crudos.append(Candidato(link, tit, m.nombre, m.categoria, "RSS", pub, True, m.pais))
                 fechas = [p.date() for _, _, p in filas if p]
                 if fechas and min(fechas) < desde:   # ya salimos del periodo
                     break
@@ -133,7 +133,7 @@ def descubrir_fuente(m: Medio, f: Fuente, red: Red, desde: date, hasta: date, tz
                 urls.extend(hijos)
                 for loc, tit, pub, fiable in filas:
                     crudos.append(Candidato(loc, tit or titulo_de_slug(loc), m.nombre, m.categoria,
-                                            "SITEMAP", pub, fiable, m.filtrar))
+                                            "SITEMAP", pub, fiable, m.pais))
         elif f.tipo == "gnews":
             # Solo titulares: Google News no entrega la URL real del artículo y el
             # sitio de origen no admite clientes automáticos, así que no hay cuerpo.
@@ -142,7 +142,7 @@ def descubrir_fuente(m: Medio, f: Fuente, red: Red, desde: date, hasta: date, tz
                  + f"&hl=es-419&gl={pais}&ceid={pais}:es-419")
             for link, tit, pub in leer_rss(red.get(u, timeout=30), tz):
                 tit = re.sub(rf"\s+-\s+{re.escape(m.nombre)}\s*$", "", tit, flags=re.I)
-                crudos.append(Candidato(link, tit, m.nombre, m.categoria, "GNEWS", pub, True, m.filtrar))
+                crudos.append(Candidato(link, tit, m.nombre, m.categoria, "GNEWS", pub, True, m.pais))
     except Exception as e:
         diag.error = f"{type(e).__name__} {str(e)[:60]}"
         return [], diag

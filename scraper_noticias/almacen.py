@@ -1,8 +1,11 @@
 """Base local (SQLite) y exportación del periodo.
 
-La base es acumulativa: los feeds de los medios grandes cubren uno o dos días,
-así que la semana completa solo existe si se corre a diario y se va sumando.
-También evita volver a descargar lo que ya se resolvió.
+La base guarda TODO lo descargado, sin filtrar: el filtro temático se aplica al
+exportar. Así la misma base sirve para cualquier búsqueda posterior sin volver
+a descargar nada.
+
+Es acumulativa: los feeds de los medios grandes cubren uno o dos días, así que
+la semana completa solo existe si se corre a diario y se va sumando.
 """
 from __future__ import annotations
 
@@ -14,17 +17,16 @@ from pathlib import Path
 
 ESQUEMA = """
 CREATE TABLE IF NOT EXISTS noticias (
-  url TEXT PRIMARY KEY, id TEXT, medio TEXT, categoria TEXT, origen TEXT, titulo TEXT,
-  fecha TEXT, fecha_publicacion TEXT, autor TEXT, terminos TEXT,
-  menciones INTEGER, densidad REAL, en_titulo INTEGER,
+  url TEXT PRIMARY KEY, id TEXT, medio TEXT, categoria TEXT, pais TEXT, origen TEXT, titulo TEXT,
+  fecha TEXT, fecha_publicacion TEXT, autor TEXT,
   estado TEXT, motivo TEXT, n_caracteres INTEGER, cuerpo TEXT,
   descubierto TEXT, extraido TEXT);
 CREATE INDEX IF NOT EXISTS ix_fecha ON noticias(fecha);
 """
-COLUMNAS = ["url", "id", "medio", "categoria", "origen", "titulo", "fecha", "fecha_publicacion",
-            "autor", "terminos", "menciones", "densidad", "en_titulo", "estado", "motivo", "n_caracteres", "cuerpo", "descubierto", "extraido"]
+COLUMNAS = ["url", "id", "medio", "categoria", "pais", "origen", "titulo", "fecha", "fecha_publicacion",
+            "autor", "estado", "motivo", "n_caracteres", "cuerpo", "descubierto", "extraido"]
 # Estados que no se reintentan. 'sin_cuerpo' sí: un bloqueo puede ser pasajero.
-RESUELTOS = ("ok", "solo_titular", "descartado_tema", "fuera_periodo")
+RESUELTOS = ("ok", "solo_titular", "fuera_periodo")
 PUBLICABLES = ("ok", "solo_titular")
 
 
@@ -57,27 +59,49 @@ class Almacen:
     def confirmar(self) -> None:
         self.db.commit()
 
-    def periodo(self, desde: str, hasta: str) -> list[dict]:
+    def periodo(self, desde: str, hasta: str, medios: list[str] | None = None) -> list[dict]:
         marcas = ",".join("?" * len(PUBLICABLES))
-        cur = self.db.execute(
-            f"SELECT {','.join(COLUMNAS)} FROM noticias WHERE estado IN ({marcas}) "
-            "AND fecha BETWEEN ? AND ? ORDER BY fecha DESC, medio, titulo", (*PUBLICABLES, desde, hasta))
+        q = (f"SELECT {','.join(COLUMNAS)} FROM noticias WHERE estado IN ({marcas}) "
+             "AND fecha BETWEEN ? AND ?")
+        args = [*PUBLICABLES, desde, hasta]
+        if medios is not None:
+            q += f" AND medio IN ({','.join('?' * len(medios))})"
+            args += medios
+        cur = self.db.execute(q + " ORDER BY fecha DESC, medio, titulo", args)
         return [dict(zip(COLUMNAS, r)) for r in cur]
 
-    def exportar(self, carpeta: str | Path, desde: str, hasta: str) -> tuple[Path, Path, int]:
-        """JSONL con el cuerpo completo y CSV liviano (sin cuerpo) para hoja de cálculo."""
+    def exportar(self, carpeta: str | Path, desde: str, hasta: str, medios: list[str] | None = None,
+                 filtro=None, filtrados: set[str] | None = None,
+                 etiqueta: str = "") -> tuple[Path, Path, int, int]:
+        """JSONL con el cuerpo completo y CSV liviano (sin cuerpo) para hoja de cálculo.
+
+        `filtro` (FiltroTemas) descarta de la exportación lo que no casa, en los
+        medios de `filtrados` (None = en todos). Con filtro, cada fila lleva
+        además terminos / menciones / densidad / en_titulo.
+        Devuelve (jsonl, csv, exportadas, descartadas_por_filtro).
+        """
         carpeta = Path(carpeta)
         carpeta.mkdir(parents=True, exist_ok=True)
-        filas = self.periodo(desde, hasta)
-        base = carpeta / f"noticias_{desde}_a_{hasta}"
-        pj, pc = base.with_suffix(".jsonl"), base.with_suffix(".csv")
+        filas, fuera = [], 0
+        for r in self.periodo(desde, hasta, medios):
+            if filtro is not None:
+                rel = filtro.evaluar(r["titulo"] or "", r["cuerpo"] or "")
+                r.update(terminos=", ".join(rel.terminos[:8]), menciones=rel.menciones,
+                         densidad=rel.densidad, en_titulo=int(rel.en_titulo))
+                if (filtrados is None or r["medio"] in filtrados) and not rel.pasa:
+                    fuera += 1
+                    continue
+            filas.append(r)
+        base = str(carpeta / f"noticias_{desde}_a_{hasta}") + (f"_{etiqueta}" if etiqueta else "")
+        pj, pc = Path(base + ".jsonl"), Path(base + ".csv")
         with open(pj, "w", encoding="utf-8") as f:
             for r in filas:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
-        cols = [c for c in COLUMNAS if c not in ("cuerpo", "motivo", "descubierto")] + ["extracto"]
+        extra = ["terminos", "menciones", "densidad", "en_titulo"] if filtro is not None else []
+        cols = [c for c in COLUMNAS if c not in ("cuerpo", "motivo", "descubierto")] + extra + ["extracto"]
         with open(pc, "w", encoding="utf-8-sig", newline="") as f:
             w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
             w.writeheader()
             for r in filas:
                 w.writerow({**r, "extracto": " ".join((r.get("cuerpo") or "").split())[:300]})
-        return pj, pc, len(filas)
+        return pj, pc, len(filas), fuera

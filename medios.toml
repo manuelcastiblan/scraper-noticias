@@ -1,101 +1,106 @@
-# Medios de minería, petróleo y energía (Argentina).
-# Cada [[medio]] tiene una o más [[medio.fuente]]:
+# Catálogo general de medios. Sin filtro temático: se guarda todo lo publicado
+# en el periodo y el tema se elige al correr, con --buscar.
+#   python -m scraper_noticias --pais CO --buscar "Primo Gay"
+#   python -m scraper_noticias --categoria mineria,energia
+#   python -m scraper_noticias --solo "Clarín,Infobae"
+# Formato de cada fuente:
 #   tipo = "rss"     -> feed RSS/Atom. `paginas` recorre ?paged=2..N (WordPress).
 #   tipo = "sitemap" -> sitemap o news-sitemap. '{AAAAMM}' se expande a cada mes del periodo.
-#   tipo = "gnews"   -> solo titulares vía Google News (para sitios que no admiten clientes automáticos).
+#   tipo = "gnews"   -> solo titulares vía Google News. Con '{buscar}' en la consulta,
+#                       la fuente solo existe cuando se corre con --buscar.
 # `incluir` / `excluir` filtran por subcadena de la URL; `prioritarias` entran primero al `tope`.
-# `filtrar = true` exige los términos de [temas] en el cuerpo (para los generalistas).
 
 [general]
-zona_horaria = "America/Argentina/Buenos_Aires"
-dias = 7
+zona_horaria = "America/Bogota"
+dias = 2          # los feeds generalistas cubren uno o dos días: correr a diario
 respetar_robots = true
-por_host = 3      # descargas simultáneas por sitio
-pausa = 0.3       # segundos entre pedidos al mismo sitio
-hilos = 12
-
-[temas]
-# Pasa si algún término está en el título, o si el cuerpo tiene `min_menciones`
-# apariciones y al menos `densidad_min` por cada 1000 caracteres.
-# Un asterisco final casa como prefijo: "miner*" -> minería, minera, mineros.
-# No están a propósito: "oro" y "plata" (plata = dinero en prensa argentina) ni
-# "RIGI" (en el título arrastraba las notas de Toyota y del "RIGI porteño").
-min_menciones = 3
-densidad_min = 2.0
-terminos = [
-  "miner*", "litio", "cobre", "uranio", "yacimiento*", "salar", "salares",
-  "petróleo", "petroler*", "crudo", "hidrocarburo*", "Vaca Muerta", "shale", "fracking",
-  "gas natural", "GNL", "gasoducto*", "oleoducto*", "refinería*", "YPF", "combustible*",
-  "energía", "energétic*", "electricidad", "renovable*",
-]
-
-# ---------------------------------------------------------------- minería
-[[medio]]
-nombre = "Panorama Minero"
-categoria = "mineria"
-  [[medio.fuente]]
-  tipo = "sitemap"
-  url = "https://www.panorama-minero.com/sitemap.xml"
-  incluir = ["/es/news/"]
+por_host = 3
+pausa = 0.3
+hilos = 16
 
 [[medio]]
-nombre = "Huella Minera"
-categoria = "mineria"
-  [[medio.fuente]]
-  tipo = "rss"
-  url = "https://huellaminera.com/feed/"
-  paginas = 8
-
-[[medio]]
-nombre = "Salta Mining"
-categoria = "mineria"
-  # saltamining.com responde con un desafío anti-bot de Cloudflare (403) a todo
-  # cliente automático, robots.txt incluido. No se intenta pasar: solo titulares.
+nombre = "Google News"
+categoria = "buscador"
+  # Titulares de cualquier medio para los términos de --buscar: llega más atrás
+  # que los feeds, pero sin cuerpo (Google no entrega la URL real del artículo).
   [[medio.fuente]]
   tipo = "gnews"
-  consulta = "site:saltamining.com"
+  consulta = "{buscar}"
 
-[[medio]]
-nombre = "Forbes Argentina"
-categoria = "mineria"
-filtrar = true    # no tiene sección de minería con feed propio: se filtra por tema
-  [[medio.fuente]]
-  tipo = "sitemap"
-  url = "https://www.forbesargentina.com/sitemapNews.xml"
-  excluir = ["/lifestyle/", "/brandvoice/"]
 
-# ------------------------------------------------------ petróleo y energía
-[[medio]]
-nombre = "EconoJournal"
-categoria = "energia"
-  [[medio.fuente]]
-  tipo = "rss"
-  url = "https://econojournal.com.ar/feed/"
-  paginas = 12
-
-[[medio]]
-nombre = "Más Energía"
-categoria = "energia"
-  [[medio.fuente]]
-  tipo = "rss"
-  url = "https://mase.lmneuquen.com/rss/pages/home.xml"
-  [[medio.fuente]]
-  tipo = "sitemap"
-  url = "https://mase.lmneuquen.com/sitemap-news.xml"
-
-# ------------------------------------------------------------ generalistas
 [[medio]]
 nombre = "Infobae"
+pais = "AR"
 categoria = "generalista"
-filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.infobae.com/arc/outboundfeeds/rss/"
   [[medio.fuente]]
   tipo = "rss"
   url = "https://www.infobae.com/arc/outboundfeeds/rss/category/economia/"
 
 [[medio]]
-nombre = "El Cronista"
+nombre = "Clarín"
+pais = "AR"
 categoria = "generalista"
-filtrar = true
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.clarin.com/sitemaps/sitemap_google_news.xml"
+  excluir = ["/loterias-y-quinielas/", "/astrologia/", "/videos/", "/fama/"]
+  tope = 400
+
+[[medio]]
+nombre = "La Nación"
+pais = "AR"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.lanacion.com.ar/arc/outboundfeeds/sitemap-news/?outputType=xml"
+  tope = 400
+
+[[medio]]
+nombre = "Página/12"
+pais = "AR"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.pagina12.com.ar/arc/outboundfeeds/rss/portada"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.pagina12.com.ar/arc/outboundfeeds/rss/secciones/economia/notas"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.pagina12.com.ar/arc/outboundfeeds/rss/secciones/el-pais/notas"
+
+[[medio]]
+nombre = "Perfil"
+pais = "AR"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.perfil.com/sitemap/news.xml"
+  tope = 300
+
+[[medio]]
+nombre = "TN"
+pais = "AR"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://tn.com.ar/feed/"
+
+[[medio]]
+nombre = "Noticias Argentinas"
+pais = "AR"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://noticiasargentinas.com/rss"
+
+[[medio]]
+nombre = "El Cronista"
+pais = "AR"
+categoria = "economia"
   [[medio.fuente]]
   tipo = "rss"
   url = "https://www.cronista.com/arc/outboundfeeds/rss/category/economia-politica/?outputType=xml"
@@ -107,26 +112,469 @@ filtrar = true
   url = "https://www.cronista.com/arc/outboundfeeds/rss/category/finanzas-mercados/?outputType=xml"
 
 [[medio]]
-nombre = "Página/12"
-categoria = "generalista"
-filtrar = true
-  [[medio.fuente]]
-  tipo = "rss"
-  url = "https://www.pagina12.com.ar/arc/outboundfeeds/rss/secciones/economia/notas"
-  [[medio.fuente]]
-  tipo = "rss"
-  url = "https://www.pagina12.com.ar/arc/outboundfeeds/rss/portada"
-
-[[medio]]
-nombre = "Clarín"
-categoria = "generalista"
-filtrar = true
+nombre = "Ámbito"
+pais = "AR"
+categoria = "economia"
   [[medio.fuente]]
   tipo = "sitemap"
-  url = "https://www.clarin.com/sitemaps/sitemap_google_news.xml"
-  incluir = ["/economia/", "/politica/", "/rural/"]
-  prioritarias = ["/economia/"]
-  tope = 250
+  url = "https://www.ambito.com/sitemap-news.xml"
+  tope = 300
+
+[[medio]]
+nombre = "iProfesional"
+pais = "AR"
+categoria = "economia"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.iprofesional.com/sitemap-news.xml"
+
+[[medio]]
+nombre = "El Economista"
+pais = "AR"
+categoria = "economia"
   [[medio.fuente]]
   tipo = "rss"
-  url = "https://www.clarin.com/rss/economia/"
+  url = "https://eleconomista.com.ar/feed/"
+
+[[medio]]
+nombre = "Forbes Argentina"
+pais = "AR"
+categoria = "economia"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.forbesargentina.com/sitemapNews.xml"
+
+[[medio]]
+nombre = "Los Andes"
+pais = "AR"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.losandes.com.ar/sitemap-news.xml"
+  tope = 300
+
+[[medio]]
+nombre = "LM Neuquén"
+pais = "AR"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.lmneuquen.com/sitemap-news.xml"
+  tope = 250
+
+[[medio]]
+nombre = "Diario Río Negro"
+pais = "AR"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.rionegro.com.ar/feed/"
+  paginas = 5
+
+[[medio]]
+nombre = "Diario de Cuyo"
+pais = "AR"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.diariodecuyo.com.ar/sitemap-news.xml"
+
+[[medio]]
+nombre = "El Tribuno"
+pais = "AR"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.eltribuno.com/sitemap-news.xml"
+
+[[medio]]
+nombre = "Tiempo de San Juan"
+pais = "AR"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.tiempodesanjuan.com/sitemap-news.xml"
+
+[[medio]]
+nombre = "Panorama Minero"
+pais = "AR"
+categoria = "mineria"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.panorama-minero.com/sitemap.xml"
+  incluir = ["/es/news/"]
+
+[[medio]]
+nombre = "Huella Minera"
+pais = "AR"
+categoria = "mineria"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://huellaminera.com/feed/"
+  paginas = 8
+
+[[medio]]
+nombre = "Minería y Desarrollo"
+pais = "AR"
+categoria = "mineria"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.mineriaydesarrollo.com/news_sitemap.xml"
+
+[[medio]]
+nombre = "Rumbo Minero"
+pais = "AR"
+categoria = "mineria"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.rumbominero.com/feed/"
+  paginas = 8
+
+[[medio]]
+nombre = "Salta Mining"
+pais = "AR"
+categoria = "mineria"
+  [[medio.fuente]]
+  tipo = "gnews"
+  consulta = "site:saltamining.com"
+  # el sitio responde 403 (desafío de Cloudflare) a clientes automáticos: solo titulares
+
+[[medio]]
+nombre = "EconoJournal"
+pais = "AR"
+categoria = "energia"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://econojournal.com.ar/feed/"
+  paginas = 12
+
+[[medio]]
+nombre = "Más Energía"
+pais = "AR"
+categoria = "energia"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://mase.lmneuquen.com/rss/pages/home.xml"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://mase.lmneuquen.com/sitemap-news.xml"
+
+[[medio]]
+nombre = "Mejor Energía"
+pais = "AR"
+categoria = "energia"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.mejorenergia.com.ar/news_sitemap.xml"
+
+[[medio]]
+nombre = "Surtidores"
+pais = "AR"
+categoria = "energia"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.surtidores.com.ar/feed/"
+  paginas = 6
+
+[[medio]]
+nombre = "Dinamicarg"
+pais = "AR"
+categoria = "energia"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://dinamicarg.com/feed/"
+  paginas = 6
+
+[[medio]]
+nombre = "El Tiempo"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.eltiempo.com/rss/colombia.xml"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.eltiempo.com/rss/justicia.xml"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.eltiempo.com/rss/bogota.xml"
+
+[[medio]]
+nombre = "El Espectador"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.elespectador.com/arc/outboundfeeds/news-sitemap/?outputType=xml"
+
+[[medio]]
+nombre = "Semana"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.semana.com/arc/outboundfeeds/rss/"
+
+[[medio]]
+nombre = "Infobae Colombia"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.infobae.com/arc/outboundfeeds/rss/category/colombia/"
+
+[[medio]]
+nombre = "Cambio"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://cambiocolombia.com/sitemap-news.xml"
+
+[[medio]]
+nombre = "Pulzo"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.pulzo.com/rss/new/news/nacion.xml"
+
+[[medio]]
+nombre = "Publimetro Colombia"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.publimetro.co/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "Kienyke"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.kienyke.com/feed/"
+  paginas = 5
+
+[[medio]]
+nombre = "Las2orillas"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.las2orillas.co/feed/"
+
+[[medio]]
+nombre = "El Nuevo Siglo"
+pais = "CO"
+categoria = "generalista"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elnuevosiglo.com.co/rss.xml"
+
+[[medio]]
+nombre = "La Silla Vacía"
+pais = "CO"
+categoria = "investigacion"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.lasillavacia.com/feed/"
+  paginas = 6
+
+[[medio]]
+nombre = "Vorágine"
+pais = "CO"
+categoria = "investigacion"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://voragine.co/feed/"
+  paginas = 3
+
+[[medio]]
+nombre = "Verdad Abierta"
+pais = "CO"
+categoria = "investigacion"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://verdadabierta.com/feed/"
+
+[[medio]]
+nombre = "InSight Crime"
+pais = "CO"
+categoria = "investigacion"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://insightcrime.org/es/feed/"
+
+[[medio]]
+nombre = "INDEPAZ"
+pais = "CO"
+categoria = "investigacion"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://indepaz.org.co/feed/"
+
+[[medio]]
+nombre = "Caracol Radio"
+pais = "CO"
+categoria = "radio_tv"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://caracol.com.co/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "Blu Radio"
+pais = "CO"
+categoria = "radio_tv"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.bluradio.com/content-sitemap-latest.xml"
+  tope = 300
+
+[[medio]]
+nombre = "La FM"
+pais = "CO"
+categoria = "radio_tv"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.lafm.com.co/sitemapnews"
+  tope = 250
+
+[[medio]]
+nombre = "Noticias RCN"
+pais = "CO"
+categoria = "radio_tv"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.noticiasrcn.com/sitemapnews"
+  tope = 250
+
+[[medio]]
+nombre = "NTN24"
+pais = "CO"
+categoria = "radio_tv"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.ntn24.com/sitemapnews"
+
+[[medio]]
+nombre = "Telemedellín"
+pais = "CO"
+categoria = "radio_tv"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.telemedellin.tv/feed/"
+  paginas = 5
+
+[[medio]]
+nombre = "El Colombiano"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elcolombiano.com/rss/portada.xml"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elcolombiano.com/rss/antioquia.xml"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elcolombiano.com/rss/colombia.xml"
+
+[[medio]]
+nombre = "Minuto30"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.minuto30.com/feed/"
+  paginas = 6
+
+[[medio]]
+nombre = "El País Cali"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elpais.com.co/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "El Heraldo"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elheraldo.co/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "El Universal"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.eluniversal.com.co/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "Vanguardia"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.vanguardia.com/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "La Opinión"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.laopinion.co/rss.xml"
+
+[[medio]]
+nombre = "La Patria"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.lapatria.com/rss.xml"
+
+[[medio]]
+nombre = "El Nuevo Día"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elnuevodia.com.co/feed/"
+  paginas = 5
+
+[[medio]]
+nombre = "La Nación (Huila)"
+pais = "CO"
+categoria = "regional"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.lanacion.com.co/feed/"
+  paginas = 5
+
+[[medio]]
+nombre = "Portafolio"
+pais = "CO"
+categoria = "economia"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.portafolio.co/news-sitemap.xml"
+
+[[medio]]
+nombre = "La República"
+pais = "CO"
+categoria = "economia"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.larepublica.co/sitemapnews"
+
+[[medio]]
+nombre = "Valora Analitik"
+pais = "CO"
+categoria = "economia"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.valoraanalitik.com/feed/"

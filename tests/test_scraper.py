@@ -115,14 +115,34 @@ class Base(unittest.TestCase):
             comun = {"medio": "M", "fecha": "2026-11-18"}
             alm.guardar({**comun, "url": "u1", "titulo": "A", "estado": "ok", "cuerpo": "x" * 400})
             alm.guardar({**comun, "url": "u2", "titulo": "B", "estado": "sin_cuerpo", "motivo": "bloqueado"})
-            alm.guardar({**comun, "url": "u3", "titulo": "C", "estado": "descartado_tema"})
+            alm.guardar({**comun, "url": "u3", "titulo": "C", "estado": "fuera_periodo"})
             alm.confirmar()
             # 'sin_cuerpo' se reintenta; lo demás no
             self.assertEqual(alm.resueltas(["u1", "u2", "u3", "u4"]), {"u1", "u3"})
-            pj, pc, n = alm.exportar(d, "2026-11-12", "2026-11-18")
-            self.assertEqual(n, 1)
+            pj, pc, n, fuera = alm.exportar(d, "2026-11-12", "2026-11-18")
+            self.assertEqual((n, fuera), (1, 0))
             self.assertIn('"titulo": "A"', pj.read_text(encoding="utf-8"))
             self.assertNotIn("xxxxxxxxxx" * 35, pc.read_text(encoding="utf-8-sig"))   # CSV sin cuerpo completo
+            alm.db.close()
+
+    def test_el_filtro_se_aplica_al_exportar_y_no_borra_nada(self):
+        with tempfile.TemporaryDirectory() as d:
+            alm = Almacen(Path(d) / "n.db")
+            f = {"fecha": "2026-11-18", "estado": "ok"}
+            alm.guardar({**f, "url": "u1", "medio": "A", "titulo": "Capturan a alias Primo Gay", "cuerpo": "texto"})
+            alm.guardar({**f, "url": "u2", "medio": "A", "titulo": "Otra cosa", "cuerpo": "el primo gay aparece aquí"})
+            alm.guardar({**f, "url": "u3", "medio": "A", "titulo": "Fútbol", "cuerpo": "nada que ver"})
+            alm.guardar({**f, "url": "u4", "medio": "B", "titulo": "Fútbol", "cuerpo": "nada que ver"})
+            alm.confirmar()
+            busca = FiltroTemas(["Primo Gay"], 1, 0.0)
+            pj, _, n, fuera = alm.exportar(d, "2026-11-18", "2026-11-18", filtro=busca, etiqueta="primo-gay")
+            self.assertEqual((n, fuera), (2, 2))
+            self.assertTrue(pj.name.endswith("_primo-gay.jsonl"))
+            # filtro solo sobre el medio A: lo de B pasa entero
+            self.assertEqual(alm.exportar(d, "2026-11-18", "2026-11-18", filtro=busca, filtrados={"A"})[2:], (3, 1))
+            # selección de medios, y la base sigue completa para otra búsqueda
+            self.assertEqual(alm.exportar(d, "2026-11-18", "2026-11-18", medios=["B"])[2], 1)
+            self.assertEqual(alm.exportar(d, "2026-11-18", "2026-11-18")[2], 4)
             alm.db.close()
 
 

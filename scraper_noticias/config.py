@@ -26,7 +26,8 @@ class Fuente:
 class Medio:
     nombre: str
     categoria: str = ""
-    filtrar: bool = False              # aplicar el filtro temático al cuerpo
+    pais: str = ""
+    filtrar: bool = False              # con [temas], solo se exporta si casa el filtro
     fuentes: list[Fuente] = field(default_factory=list)
 
 
@@ -66,7 +67,7 @@ def cargar(ruta: str | Path) -> Config:
                 prioritarias=tuple(f.get("prioritarias", ())), tope=int(f.get("tope", 200))))
         if not fuentes:
             raise ValueError(f"{m.get('nombre')}: sin fuentes")
-        medios.append(Medio(nombre=m["nombre"], categoria=m.get("categoria", ""),
+        medios.append(Medio(nombre=m["nombre"], categoria=m.get("categoria", ""), pais=m.get("pais", ""),
                             filtrar=bool(m.get("filtrar", False)), fuentes=fuentes))
     if not medios:
         raise ValueError("el archivo no define ningún [[medio]]")

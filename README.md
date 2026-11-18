@@ -1,105 +1,120 @@
 # scraper-noticias
 
-Scraper de noticias por RSS y sitemaps: descubre los artículos de un periodo,
-descarga el cuerpo completo, aplica un filtro temático a los medios generalistas
-y deja todo en una base local más un JSONL y un CSV por periodo.
+Scraper de noticias de tema libre, por RSS y sitemaps. Descubre lo que publicó
+cada medio en un periodo, descarga el cuerpo completo y lo guarda todo en una
+base local. El tema se elige después, al exportar: la misma base responde
+cualquier búsqueda sin volver a descargar.
 
-Sale del flujo de respaldo de Noticias de `fuentes-publicas-noticias`
-(`DF_NB_300_GOLD_NOTICIAS_GDELT`), sin Fabric, Spark ni IA: se quedó el
-descubrimiento (RSS + sitemaps con cuota por sección), la extracción reforzada
-(trafilatura, respaldo por párrafos, detección de muros) y la ventana de fechas
-por parámetro. La geolocalización por municipio y la interpretación con modelo
-no están aquí.
+Trae un catálogo de 62 medios de Argentina y Colombia (generalistas, economía,
+regionales, radio y TV, investigación, y especializados en minería y energía).
+
+Sale del flujo de respaldo de Noticias de `fuentes-publicas-noticias`, sin
+Fabric, Spark ni IA: se quedó el descubrimiento (RSS + sitemaps con cuota por
+sección), la extracción reforzada (trafilatura, respaldo por párrafos,
+detección de muros) y la ventana de fechas por parámetro.
 
 ## Uso
 
 ```powershell
 py -m venv .venv
 .venv\Scripts\python -m pip install -e .
-.venv\Scripts\python -m scraper_noticias
+.venv\Scripts\python -m scraper_noticias --pais CO --buscar "Primo Gay"
 ```
-
-Sin argumentos toma los últimos 7 días y `medios.toml`. Opciones:
 
 | Opción | Qué hace |
 |---|---|
-| `--desde` / `--hasta` | Periodo `YYYY-MM-DD` |
-| `--dias N` | Ventana cuando no se dan fechas |
-| `--medios ARCHIVO` | Otro archivo de medios (p. ej. `perfiles/colombia_seguridad.toml`) |
+| `--buscar "a,b"` | Exporta solo lo que mencione alguno de los términos (título o cuerpo) |
+| `--pais AR,CO` | Solo medios de esos países |
+| `--categoria mineria,energia` | Solo esas categorías |
 | `--solo "Clarín,Infobae"` | Solo esos medios |
-| `--solo-descubrir` | Lista los candidatos y no descarga nada |
-| `--sin-filtro` | Guarda todo, sin filtro temático |
+| `--desde` / `--hasta` | Periodo `YYYY-MM-DD` |
+| `--dias N` | Ventana cuando no se dan fechas (2 en el catálogo general) |
+| `--medios ARCHIVO` | Otro archivo de medios (un perfil de `perfiles/`) |
+| `--solo-descubrir` | Cuenta candidatos por fuente y no descarga nada (`--listar` los imprime) |
+| `--sin-filtro` | Ignora el filtro `[temas]` de un perfil |
 | `--salida CARPETA` | Dónde van la base y las exportaciones (`datos/`) |
+
+Los términos casan como palabra o frase completa, sin distinguir tildes ni
+mayúsculas; un asterisco final casa como prefijo (`miner*`).
 
 Salida en `datos/`:
 
-- `noticias.db` — base SQLite acumulativa, una fila por URL.
-- `noticias_<desde>_a_<hasta>.jsonl` — el periodo, con el cuerpo completo.
-- `noticias_<desde>_a_<hasta>.csv` — lo mismo sin cuerpo (con un extracto), para hoja de cálculo.
+- `noticias.db` — base SQLite acumulativa, una fila por URL, con todo lo descargado.
+- `noticias_<desde>_a_<hasta>[_<búsqueda>].jsonl` — el periodo, con el cuerpo completo.
+- `noticias_<desde>_a_<hasta>[_<búsqueda>].csv` — lo mismo sin cuerpo (con un extracto).
 
-Columnas: `medio`, `categoria`, `titulo`, `url`, `fecha` (local), `fecha_publicacion`,
-`autor`, `origen` (RSS / SITEMAP / GNEWS), `terminos`, `menciones`, `densidad`,
-`en_titulo`, `estado`, `n_caracteres`, `cuerpo`.
+Con `--buscar` o con un perfil filtrado, cada fila lleva además `terminos`,
+`menciones`, `densidad` (menciones por cada 1000 caracteres) y `en_titulo`.
 
-## Hay que correrlo a diario
+## Dos límites que conviene conocer
 
-Los feeds de los medios grandes cubren poco: el news-sitemap de Clarín y los RSS
-de El Cronista e Infobae llegan a uno o dos días hacia atrás. La semana completa
-solo existe si el scraper corre todos los días y la base va acumulando. Cada
-corrida descarga únicamente lo que no está resuelto y reexporta el periodo.
+**Los feeds llegan poco hacia atrás.** Los de los medios grandes cubren uno o
+dos días. Una semana completa solo existe si el scraper corre a diario y la
+base acumula; cada corrida descarga únicamente lo que no está resuelto. Para un
+hecho de hace varios días, los artículos con cuerpo serán solo los recientes.
 
-## Medios incluidos (`medios.toml`)
+**Google News da titulares, no cuerpos.** Con `--buscar` se suma una consulta a
+Google News, que sí llega más atrás, pero entrega título, fecha y medio con un
+enlace propio de Google, no la URL del artículo (`estado = solo_titular`).
 
-Medido el 2026-11-18 sobre la ventana 11 al 18 de noviembre:
+Ejemplo medido (2026-11-18, `--buscar "Primo Gay"` del 12 al 18 de noviembre,
+sobre siete medios colombianos): 1.032 artículos descargados sin un solo fallo,
+49 mencionan el alias, 47 de ellos del 17 y 18; los días de la captura (14 y 15)
+quedaron cubiertos casi solo por los 97 titulares de Google News.
 
-| Medio | Vía | Alcance del feed | Resultado |
-|---|---|---|---|
-| Panorama Minero | sitemap, sección `/es/news/` | histórico completo | 4 notas, todas con cuerpo |
-| Huella Minera | RSS de WordPress, paginado | histórico | 7 |
-| EconoJournal | RSS de WordPress, paginado | histórico | 38 |
-| Más Energía | RSS + news-sitemap | ~5 días | 23 |
-| Forbes Argentina | news-sitemap + filtro | ~2 días | 2 de 71 |
-| Infobae | RSS de Economía + filtro | ~2 días | 7 de 100 |
-| El Cronista | 3 RSS de sección + filtro | ~2 días | 15 de 128 |
-| Página/12 | RSS de Economía y portada + filtro | ~3 días | 1 de 30 |
-| Clarín | news-sitemap (economía, política, rural) + filtro | ~2 días | 4 de 171 |
-| Salta Mining | **solo titulares** vía Google News | — | 45 titulares, sin cuerpo |
+## Catálogo (`medios.toml`)
 
-Ninguna de las 572 descargas falló ni fue bloqueada.
+Verificado el 2026-11-18: 61 de las 62 fuentes respondieron con notas del día.
 
-**Salta Mining no se puede scrapear directo.** `saltamining.com` responde con un
-desafío anti-bot de Cloudflare (403) a cualquier cliente automático, incluido su
-`robots.txt`. No se intenta pasarlo. Queda cubierto a nivel de titular, fecha y
-enlace de Google News (`estado = solo_titular`); el enlace es el de Google, no
-la URL del sitio.
+| País | Categoría | Medios |
+|---|---|---|
+| AR | generalista | Infobae, Clarín, La Nación, Página/12, Perfil, TN, Noticias Argentinas |
+| AR | economia | El Cronista, Ámbito, iProfesional, El Economista, Forbes Argentina |
+| AR | regional | Los Andes, LM Neuquén, Diario Río Negro, Diario de Cuyo, El Tribuno, Tiempo de San Juan |
+| AR | mineria | Panorama Minero, Huella Minera, Minería y Desarrollo, Rumbo Minero, Salta Mining (solo titulares) |
+| AR | energia | EconoJournal, Más Energía, Mejor Energía, Surtidores, Dinamicarg |
+| CO | generalista | El Tiempo, El Espectador, Semana, Infobae Colombia, Cambio, Pulzo, Publimetro, Kienyke, Las2orillas, El Nuevo Siglo |
+| CO | investigacion | La Silla Vacía, Vorágine, Verdad Abierta, InSight Crime, INDEPAZ |
+| CO | radio_tv | Caracol Radio, Blu Radio, La FM, Noticias RCN, NTN24, Telemedellín |
+| CO | regional | El Colombiano, Minuto30, El País Cali, El Heraldo, El Universal, Vanguardia, La Opinión, La Patria, El Nuevo Día, La Nación (Huila) |
+| CO | economia | Portafolio, La República, Valora Analitik |
 
-**Forbes no tiene un feed de minería.** No hay sección ni RSS propios de minería
-en `forbesargentina.com`, así que entra como generalista con filtro temático.
+Sin acceso, comprobado:
 
-## Filtro temático
+- **Salta Mining** y **Minería Sustentable** responden 403 a clientes automáticos
+  (desafío anti-bot). No se intenta pasarlo; Salta Mining queda con titulares.
+- **Rumbo Minero** respondió bien en el sondeo y con error 520 del servidor en la validación: intermitente.
+- Sin feed ni news-sitemap utilizable: Noticias Caracol, RCN Radio, Teleantioquia,
+  Q'hubo, Canal 1, Mining Press, EnerNews, Energía Estratégica, BAE Negocios,
+  La Política Online, Reporte Minero. W Radio tiene feed pero con una sola nota.
 
-Los especializados entran completos. Los que tienen `filtrar = true` pasan si
-algún término de `[temas]` está en el título, o si el cuerpo tiene al menos
-`min_menciones` apariciones y `densidad_min` por cada 1000 caracteres.
+El catálogo completo son unas 6.000 notas cada dos días: conviene acotar con
+`--pais`, `--categoria` o `--solo`.
 
-El umbral de densidad sale de medir 500 notas de los generalistas sin filtrar:
-contar menciones no alcanza, porque una nota larga de macroeconomía junta cinco
-o diez sueltas («energía», «YPF» en una lista de acciones) sin tratar del
-sector. Con densidad, el ruido queda por debajo de 1 y las notas del sector por
-encima de 2. Sigue siendo un filtro de palabras: las notas de inflación
-mayorista pasan porque hablan mucho de petróleo. `menciones`, `densidad` y
-`en_titulo` quedan en cada fila para ajustar el corte después sin volver a
-descargar.
+## Perfiles (`perfiles/`)
+
+Un perfil es un archivo de medios con su propio filtro `[temas]`, para un
+seguimiento fijo. Los medios con `filtrar = true` solo se exportan si casan.
+
+- `mineria_energia_ar.toml` — minería, petróleo y energía en Argentina: los
+  especializados completos y cuatro generalistas filtrados.
+- `colombia_seguridad.toml` — seguridad y orden público en Colombia, con los
+  feeds y términos del proyecto de origen.
+
+El filtro de perfil pasa una nota si algún término está en el título, o si el
+cuerpo tiene `min_menciones` apariciones y `densidad_min` por cada 1000
+caracteres. El umbral de densidad sale de medir 500 notas de generalistas
+argentinos: contar menciones no alcanza, porque una nota larga de macroeconomía
+junta cinco o diez sueltas sin tratar del sector. Sigue siendo un filtro de
+palabras: las notas de inflación mayorista pasan porque hablan mucho de petróleo.
 
 ## Agregar un medio
-
-Un bloque en el TOML:
 
 ```toml
 [[medio]]
 nombre = "Mi Medio"
-categoria = "energia"
-filtrar = false
+pais = "CO"
+categoria = "regional"
   [[medio.fuente]]
   tipo = "rss"            # rss | sitemap | gnews
   url = "https://ejemplo.com/feed/"
@@ -110,8 +125,8 @@ En `sitemap` valen además `incluir` / `excluir` (subcadenas de la URL),
 `prioritarias` (secciones que entran primero al `tope`) y `{AAAAMM}` en la URL
 para sitemaps mensuales. Conviene probar con `--solo "Mi Medio" --solo-descubrir`.
 
-Si un medio configurado no trae ningún candidato, la corrida lo avisa en
-mayúsculas: casi siempre es el feed roto, no falta de noticias.
+Si un medio no trae ningún candidato, la corrida lo avisa: puede ser el feed
+roto o simplemente un medio de cadencia lenta dentro de una ventana corta.
 
 ## Comportamiento frente a los sitios
 
