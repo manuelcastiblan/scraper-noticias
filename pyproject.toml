@@ -1,0 +1,16 @@
+[project]
+name = "scraper-noticias"
+version = "0.1.0"
+description = "Scraper de noticias por RSS y sitemaps, con extracción del cuerpo y filtro temático"
+requires-python = ">=3.11"
+dependencies = ["trafilatura>=2.0", "feedparser>=6.0", "tzdata"]
+
+[project.scripts]
+scraper-noticias = "scraper_noticias.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["scraper_noticias"]

@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.env
+.env.*
+
+# salida del scraper: base local y exportaciones (texto de terceros, no se versiona)
+datos/
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

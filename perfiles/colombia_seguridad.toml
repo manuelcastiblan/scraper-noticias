@@ -1,0 +1,127 @@
+# Perfil heredado del proyecto de origen (fuentes-publicas-noticias): prensa
+# colombiana con foco en seguridad y orden público. Son los mismos feeds y
+# términos del notebook de respaldo; aquí no hay geolocalización por municipio
+# ni interpretación con IA, solo descubrimiento, cuerpo y filtro por términos.
+#   python -m scraper_noticias --medios perfiles/colombia_seguridad.toml
+
+[general]
+zona_horaria = "America/Bogota"
+dias = 7
+pais_gnews = "CO"
+
+[temas]
+min_menciones = 2
+densidad_min = 0.5
+terminos = [
+  "ELN", "disidencia*", "Clan del Golfo", "AGC", "autodefensa*", "paramilitar*",
+  "extorsión", "secuestro*", "homicidio*", "masacre*", "asesinat*", "sicario*", "atentado*",
+  "minería ilegal", "orden público", "desplazamiento", "oleoducto*", "explosiv*",
+  "hostigamiento*", "retén ilegal", "paro armado", "reclutamiento", "narcotráfico",
+  "cultivos ilícitos", "contrabando", "combate*", "guerrilla*", "grupo armado",
+  "confinamiento", "mina antipersona",
+]
+
+[[medio]]
+nombre = "Semana"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.semana.com/arc/outboundfeeds/rss/"
+
+[[medio]]
+nombre = "Caracol Radio"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://caracol.com.co/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "El Colombiano"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elcolombiano.com/rss/colombia.xml"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.elcolombiano.com/rss/antioquia.xml"
+
+[[medio]]
+nombre = "El Tiempo"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.eltiempo.com/rss/colombia.xml"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.eltiempo.com/rss/justicia.xml"
+
+[[medio]]
+nombre = "El Espectador"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.elespectador.com/arc/outboundfeeds/news-sitemap/?outputType=xml"
+  tope = 90
+
+[[medio]]
+nombre = "Blu Radio"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.bluradio.com/content-sitemap-latest.xml"
+  tope = 90
+
+[[medio]]
+nombre = "Vanguardia"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.vanguardia.com/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "El Universal"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.eluniversal.com.co/arc/outboundfeeds/rss/?outputType=xml"
+
+[[medio]]
+nombre = "El Meridiano"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://elmeridiano.co/cordoba/sitemap.xml"
+  incluir = ["/judicial/", "/municipio/"]
+  prioritarias = ["/judicial/"]
+  tope = 110
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://elmeridiano.co/sucre/sitemap.xml"
+  incluir = ["/judicial/", "/municipio/"]
+  prioritarias = ["/judicial/"]
+  tope = 110
+
+[[medio]]
+nombre = "Verdad Abierta"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://verdadabierta.com/feed/"
+
+[[medio]]
+nombre = "InSight Crime"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://insightcrime.org/es/feed/"
+
+[[medio]]
+nombre = "INDEPAZ"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://indepaz.org.co/feed/"
+
+[[medio]]
+nombre = "La Silla Vacía"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.lasillavacia.com/feed/"

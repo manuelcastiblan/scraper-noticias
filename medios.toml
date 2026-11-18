@@ -1,0 +1,132 @@
+# Medios de minería, petróleo y energía (Argentina).
+# Cada [[medio]] tiene una o más [[medio.fuente]]:
+#   tipo = "rss"     -> feed RSS/Atom. `paginas` recorre ?paged=2..N (WordPress).
+#   tipo = "sitemap" -> sitemap o news-sitemap. '{AAAAMM}' se expande a cada mes del periodo.
+#   tipo = "gnews"   -> solo titulares vía Google News (para sitios que no admiten clientes automáticos).
+# `incluir` / `excluir` filtran por subcadena de la URL; `prioritarias` entran primero al `tope`.
+# `filtrar = true` exige los términos de [temas] en el cuerpo (para los generalistas).
+
+[general]
+zona_horaria = "America/Argentina/Buenos_Aires"
+dias = 7
+respetar_robots = true
+por_host = 3      # descargas simultáneas por sitio
+pausa = 0.3       # segundos entre pedidos al mismo sitio
+hilos = 12
+
+[temas]
+# Pasa si algún término está en el título, o si el cuerpo tiene `min_menciones`
+# apariciones y al menos `densidad_min` por cada 1000 caracteres.
+# Un asterisco final casa como prefijo: "miner*" -> minería, minera, mineros.
+# No están a propósito: "oro" y "plata" (plata = dinero en prensa argentina) ni
+# "RIGI" (en el título arrastraba las notas de Toyota y del "RIGI porteño").
+min_menciones = 3
+densidad_min = 2.0
+terminos = [
+  "miner*", "litio", "cobre", "uranio", "yacimiento*", "salar", "salares",
+  "petróleo", "petroler*", "crudo", "hidrocarburo*", "Vaca Muerta", "shale", "fracking",
+  "gas natural", "GNL", "gasoducto*", "oleoducto*", "refinería*", "YPF", "combustible*",
+  "energía", "energétic*", "electricidad", "renovable*",
+]
+
+# ---------------------------------------------------------------- minería
+[[medio]]
+nombre = "Panorama Minero"
+categoria = "mineria"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.panorama-minero.com/sitemap.xml"
+  incluir = ["/es/news/"]
+
+[[medio]]
+nombre = "Huella Minera"
+categoria = "mineria"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://huellaminera.com/feed/"
+  paginas = 8
+
+[[medio]]
+nombre = "Salta Mining"
+categoria = "mineria"
+  # saltamining.com responde con un desafío anti-bot de Cloudflare (403) a todo
+  # cliente automático, robots.txt incluido. No se intenta pasar: solo titulares.
+  [[medio.fuente]]
+  tipo = "gnews"
+  consulta = "site:saltamining.com"
+
+[[medio]]
+nombre = "Forbes Argentina"
+categoria = "mineria"
+filtrar = true    # no tiene sección de minería con feed propio: se filtra por tema
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.forbesargentina.com/sitemapNews.xml"
+  excluir = ["/lifestyle/", "/brandvoice/"]
+
+# ------------------------------------------------------ petróleo y energía
+[[medio]]
+nombre = "EconoJournal"
+categoria = "energia"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://econojournal.com.ar/feed/"
+  paginas = 12
+
+[[medio]]
+nombre = "Más Energía"
+categoria = "energia"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://mase.lmneuquen.com/rss/pages/home.xml"
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://mase.lmneuquen.com/sitemap-news.xml"
+
+# ------------------------------------------------------------ generalistas
+[[medio]]
+nombre = "Infobae"
+categoria = "generalista"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.infobae.com/arc/outboundfeeds/rss/category/economia/"
+
+[[medio]]
+nombre = "El Cronista"
+categoria = "generalista"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.cronista.com/arc/outboundfeeds/rss/category/economia-politica/?outputType=xml"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.cronista.com/arc/outboundfeeds/rss/category/negocios/?outputType=xml"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.cronista.com/arc/outboundfeeds/rss/category/finanzas-mercados/?outputType=xml"
+
+[[medio]]
+nombre = "Página/12"
+categoria = "generalista"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.pagina12.com.ar/arc/outboundfeeds/rss/secciones/economia/notas"
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.pagina12.com.ar/arc/outboundfeeds/rss/portada"
+
+[[medio]]
+nombre = "Clarín"
+categoria = "generalista"
+filtrar = true
+  [[medio.fuente]]
+  tipo = "sitemap"
+  url = "https://www.clarin.com/sitemaps/sitemap_google_news.xml"
+  incluir = ["/economia/", "/politica/", "/rural/"]
+  prioritarias = ["/economia/"]
+  tope = 250
+  [[medio.fuente]]
+  tipo = "rss"
+  url = "https://www.clarin.com/rss/economia/"
