@@ -129,3 +129,7 @@ versiones; sirve para análisis propio, no para republicar.
 ```
 
 Son sin red: fechas y zona horaria, filtro, lectura de RSS y sitemaps, base local.
+
+## Licencia
+
+MIT, ver `LICENSE`. Cubre el código; el contenido de los artículos es de cada medio.
