@@ -13,6 +13,10 @@ Fabric, Spark ni IA: se quedó el descubrimiento (RSS + sitemaps con cuota por
 sección), la extracción reforzada (trafilatura, respaldo por párrafos,
 detección de muros) y la ventana de fechas por parámetro.
 
+La [guía de instalación y uso](docs/guia.md) tiene el paso a paso: instalación
+en Windows, macOS y Linux, ejemplos, cómo programar la corrida diaria, cómo
+agregar medios y los problemas frecuentes.
+
 ## Uso
 
 ```powershell
