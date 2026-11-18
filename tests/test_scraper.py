@@ -107,6 +107,15 @@ class Extraccion(unittest.TestCase):
         ex = extraer_html(html, 300)
         self.assertGreaterEqual(len(ex.cuerpo), 300)
 
+    def test_articlebody_completa_una_extraccion_corta(self):
+        largo = "Frase del artículo completo con \\u00f1 y comillas \\\"dobles\\\". " * 30
+        html = ("<html><head><script type=\"application/ld+json\">{\"@type\":\"NewsArticle\",\"articleBody\":\""
+                + largo + "\"}</script></head><body><article><p>Solo el primer párrafo visible de la nota.</p>"
+                "</article></body></html>")
+        ex = extraer_html(html, 300)
+        self.assertGreater(len(ex.cuerpo), 1500)
+        self.assertIn('ñ y comillas "dobles"', ex.cuerpo)
+
 
 class Base(unittest.TestCase):
     def test_guardar_resolver_exportar(self):
@@ -122,7 +131,7 @@ class Base(unittest.TestCase):
             pj, pc, n, fuera = alm.exportar(d, "2026-11-12", "2026-11-18")
             self.assertEqual((n, fuera), (1, 0))
             self.assertIn('"titulo": "A"', pj.read_text(encoding="utf-8"))
-            self.assertNotIn("xxxxxxxxxx" * 35, pc.read_text(encoding="utf-8-sig"))   # CSV sin cuerpo completo
+            self.assertIn("x" * 400, pc.read_text(encoding="utf-8-sig"))   # el CSV también lleva el cuerpo entero
             alm.db.close()
 
     def test_el_filtro_se_aplica_al_exportar_y_no_borra_nada(self):

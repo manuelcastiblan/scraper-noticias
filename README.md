@@ -48,7 +48,7 @@ Salida en `datos/`:
 
 - `noticias.db` — base SQLite acumulativa, una fila por URL, con todo lo descargado.
 - `noticias_<desde>_a_<hasta>[_<búsqueda>].jsonl` — el periodo, con el cuerpo completo.
-- `noticias_<desde>_a_<hasta>[_<búsqueda>].csv` — lo mismo sin cuerpo (con un extracto).
+- `noticias_<desde>_a_<hasta>[_<búsqueda>].csv` — lo mismo para hoja de cálculo, también con el cuerpo completo en la columna `cuerpo`.
 
 Con `--buscar` o con un perfil filtrado, cada fila lleva además `terminos`,
 `menciones`, `densidad` (menciones por cada 1000 caracteres) y `en_titulo`.

@@ -28,6 +28,7 @@ COLUMNAS = ["url", "id", "medio", "categoria", "pais", "origen", "titulo", "fech
 # Estados que no se reintentan. 'sin_cuerpo' sí: un bloqueo puede ser pasajero.
 RESUELTOS = ("ok", "solo_titular", "fuera_periodo")
 PUBLICABLES = ("ok", "solo_titular")
+LIMITE_CELDA = 32_000
 
 
 def id_noticia(url: str) -> str:
@@ -73,7 +74,7 @@ class Almacen:
     def exportar(self, carpeta: str | Path, desde: str, hasta: str, medios: list[str] | None = None,
                  filtro=None, filtrados: set[str] | None = None,
                  etiqueta: str = "") -> tuple[Path, Path, int, int]:
-        """JSONL con el cuerpo completo y CSV liviano (sin cuerpo) para hoja de cálculo.
+        """JSONL y CSV del periodo, los dos con el cuerpo completo del artículo.
 
         `filtro` (FiltroTemas) descarta de la exportación lo que no casa, en los
         medios de `filtrados` (None = en todos). Con filtro, cada fila lleva
@@ -98,10 +99,11 @@ class Almacen:
             for r in filas:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         extra = ["terminos", "menciones", "densidad", "en_titulo"] if filtro is not None else []
-        cols = [c for c in COLUMNAS if c not in ("cuerpo", "motivo", "descubierto")] + extra + ["extracto"]
+        cols = [c for c in COLUMNAS if c not in ("cuerpo", "motivo", "descubierto")] + extra + ["cuerpo"]
         with open(pc, "w", encoding="utf-8-sig", newline="") as f:
             w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
             w.writeheader()
             for r in filas:
-                w.writerow({**r, "extracto": " ".join((r.get("cuerpo") or "").split())[:300]})
+                # Excel admite 32.767 caracteres por celda; lo que pase de ahí está en el JSONL.
+                w.writerow({**r, "cuerpo": (r.get("cuerpo") or "")[:LIMITE_CELDA]})
         return pj, pc, len(filas), fuera

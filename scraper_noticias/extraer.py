@@ -26,8 +26,37 @@ class Extraccion:
     motivo: str | None = None     # por qué no hay cuerpo
 
 
+_LD_RX = re.compile(r'"articleBody"\s*:\s*"((?:[^"\\]|\\.)*)"')
+
+
+def cuerpo_jsonld(html: str) -> str:
+    """El texto que el propio medio declara en sus datos estructurados (schema.org)."""
+    mejor = ""
+    for m in _LD_RX.finditer(html):
+        try:
+            t = json.loads('"' + m.group(1) + '"')
+        except Exception:
+            continue
+        t = re.sub(r"<[^>]+>", " ", unescape(t)).strip()
+        if len(t) > len(mejor):
+            mejor = t
+    return mejor
+
+
 def extraer_html(html: str, min_cuerpo: int = 300) -> Extraccion:
-    """trafilatura con metadatos; si no saca cuerpo, respaldo juntando los <p>."""
+    """trafilatura con metadatos; contraste con el articleBody de la página y,
+    si no hay cuerpo, respaldo juntando los <p>."""
+    ex = _extraer_base(html, min_cuerpo)
+    # trafilatura a veces se queda con el primer bloque (medido: una nota de
+    # Semana con 623 caracteres de 2.181). Si el medio declara un articleBody
+    # claramente más largo, ese es el artículo completo.
+    ld = cuerpo_jsonld(html)
+    if len(ld) >= min_cuerpo and len(ld) > 1.25 * len(ex.cuerpo or ""):
+        ex.cuerpo = ld
+    return ex
+
+
+def _extraer_base(html: str, min_cuerpo: int) -> Extraccion:
     ex = Extraccion()
     try:
         crudo = trafilatura.extract(html, output_format="json", with_metadata=True,

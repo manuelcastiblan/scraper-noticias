@@ -51,7 +51,7 @@ el comando `scraper-noticias`, equivalente a `python -m scraper_noticias`.
 .venv\Scripts\python -m unittest discover -s tests
 ```
 
-Deben pasar las 21 pruebas. No usan la red.
+Deben pasar las 22 pruebas. No usan la red.
 
 ## 3. Primera corrida
 
@@ -69,8 +69,8 @@ Y esto las descarga:
 ```
 
 Al terminar hay tres archivos en `datos/`: la base `noticias.db` y la
-exportación del periodo en `.jsonl` (con el cuerpo) y `.csv` (sin cuerpo, para
-abrir en Excel).
+exportación del periodo en `.jsonl` y `.csv` (este último para abrir en Excel). Los dos traen el texto
+completo de cada artículo.
 
 Sin ninguna opción, el scraper recorre los 62 medios del catálogo: unas 6.000
 descargas cada dos días. Funciona, pero casi siempre es mejor acotar.
@@ -150,8 +150,7 @@ FILTRO (--buscar ['Primo Gay']): 146 pasan | 986 quedan en la base sin exportar
 | `fecha_publicacion` | Fecha y hora completas |
 | `origen` | `RSS`, `SITEMAP` o `GNEWS` |
 | `estado` | `ok` (con cuerpo) o `solo_titular` |
-| `n_caracteres`, `cuerpo` | El texto del artículo (`cuerpo` solo en el `.jsonl`) |
-| `extracto` | Primeros 300 caracteres (solo en el `.csv`) |
+| `n_caracteres`, `cuerpo` | El texto completo del artículo y su largo. Vacío en las filas `solo_titular` |
 | `terminos`, `menciones`, `densidad`, `en_titulo` | Solo cuando hay filtro: qué términos aparecen, cuántas veces, cuántas por cada 1000 caracteres y si alguno está en el título |
 
 El `.csv` se guarda en UTF-8 con marca de orden de bytes, así Excel muestra
@@ -264,6 +263,12 @@ Se puede desactivar con `respetar_robots = false` en `[general]`, bajo tu respon
 feeds, no un error: solo hay cuerpo de lo publicado en los últimos uno o dos
 días, o de lo que la base ya venía acumulando. Los titulares de Google News sí
 llegan más atrás.
+
+**Una fila no tiene texto.** Si su `estado` es `solo_titular`, viene de Google
+News, que no entrega el artículo. Las filas `ok` siempre traen el cuerpo entero.
+En Excel una celda larga se ve en una sola línea: el texto está completo, hay
+que abrir la celda o activar «Ajustar texto». El `.csv` corta a 32.000
+caracteres por el límite de Excel; el `.jsonl` no corta nunca.
 
 **Quiero empezar de cero.** Borra la carpeta `datos/`. La base se crea de nuevo
 en la siguiente corrida.
