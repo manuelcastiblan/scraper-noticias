@@ -8,8 +8,16 @@
 
 Para comprobar la versión de Python:
 
+Windows:
+
 ```powershell
 py --version
+```
+
+macOS y Linux:
+
+```bash
+python3 --version
 ```
 
 En Windows, si `python` responde «Python was not found», usa `py`: es el
@@ -35,8 +43,8 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```
 
-De aquí en adelante los ejemplos usan la ruta de Windows,
-`.venv\Scripts\python`. En macOS y Linux es `.venv/bin/python`.
+De aquí en adelante cada ejemplo trae el comando dos veces: primero para
+Windows (`.venv\Scripts\python`) y después para macOS y Linux (`.venv/bin/python`).
 
 No hace falta activar el entorno virtual: basta con llamar a su Python por la
 ruta. Los comandos se corren siempre desde la carpeta del repositorio, que es
@@ -47,8 +55,16 @@ el comando `scraper-noticias`, equivalente a `python -m scraper_noticias`.
 
 ### Comprobar que quedó bien
 
+Windows:
+
 ```powershell
 .venv\Scripts\python -m unittest discover -s tests
+```
+
+macOS y Linux:
+
+```bash
+.venv/bin/python -m unittest discover -s tests
 ```
 
 Deben pasar las 23 pruebas. No usan la red.
@@ -58,14 +74,30 @@ Deben pasar las 23 pruebas. No usan la red.
 Conviene empezar por algo pequeño. Esto lista cuántas notas hay disponibles en
 dos medios, sin descargar nada:
 
+Windows:
+
 ```powershell
 .venv\Scripts\python -m scraper_noticias --solo "El Tiempo,Semana" --solo-descubrir
 ```
 
+macOS y Linux:
+
+```bash
+.venv/bin/python -m scraper_noticias --solo "El Tiempo,Semana" --solo-descubrir
+```
+
 Y esto las descarga:
+
+Windows:
 
 ```powershell
 .venv\Scripts\python -m scraper_noticias --solo "El Tiempo,Semana"
+```
+
+macOS y Linux:
+
+```bash
+.venv/bin/python -m scraper_noticias --solo "El Tiempo,Semana"
 ```
 
 Al terminar hay tres archivos en `datos/`: la base `noticias.db` y la
@@ -79,32 +111,72 @@ descargas cada dos días. Funciona, pero casi siempre es mejor acotar.
 
 Buscar un tema en los medios de un país:
 
+Windows:
+
 ```powershell
 .venv\Scripts\python -m scraper_noticias --pais CO --buscar "Primo Gay"
 ```
 
+macOS y Linux:
+
+```bash
+.venv/bin/python -m scraper_noticias --pais CO --buscar "Primo Gay"
+```
+
 Varios términos (basta con que aparezca uno) y un periodo explícito:
+
+Windows:
 
 ```powershell
 .venv\Scripts\python -m scraper_noticias --pais AR --buscar "litio,cobre" --desde 2026-11-10 --hasta 2026-11-18
 ```
 
+macOS y Linux:
+
+```bash
+.venv/bin/python -m scraper_noticias --pais AR --buscar "litio,cobre" --desde 2026-11-10 --hasta 2026-11-18
+```
+
 Solo los medios especializados en minería y energía, completos:
+
+Windows:
 
 ```powershell
 .venv\Scripts\python -m scraper_noticias --categoria mineria,energia --dias 7
 ```
 
+macOS y Linux:
+
+```bash
+.venv/bin/python -m scraper_noticias --categoria mineria,energia --dias 7
+```
+
 Un perfil con filtro fijo:
+
+Windows:
 
 ```powershell
 .venv\Scripts\python -m scraper_noticias --medios perfiles/mineria_energia_ar.toml
 ```
 
+macOS y Linux:
+
+```bash
+.venv/bin/python -m scraper_noticias --medios perfiles/mineria_energia_ar.toml
+```
+
 Guardar una investigación en su propia carpeta, con su propia base:
+
+Windows:
 
 ```powershell
 .venv\Scripts\python -m scraper_noticias --pais CO --buscar "Primo Gay" --salida datos\primo_gay
+```
+
+macOS y Linux:
+
+```bash
+.venv/bin/python -m scraper_noticias --pais CO --buscar "Primo Gay" --salida datos/primo_gay
 ```
 
 Sobre `--buscar`:
@@ -158,8 +230,16 @@ bien las tildes al abrirlo con doble clic.
 
 Para consultar la base directamente:
 
+Windows:
+
 ```powershell
 .venv\Scripts\python -c "import sqlite3; print(sqlite3.connect('datos/noticias.db').execute('select medio, count(*) from noticias group by 1 order by 2 desc').fetchall())"
+```
+
+macOS y Linux:
+
+```bash
+.venv/bin/python -c "import sqlite3; print(sqlite3.connect('datos/noticias.db').execute('select medio, count(*) from noticias group by 1 order by 2 desc').fetchall())"
 ```
 
 ## 7. Correrlo todos los días
@@ -222,8 +302,16 @@ Cómo encontrar la fuente de un medio nuevo:
 
 Después compruébalo:
 
+Windows:
+
 ```powershell
 .venv\Scripts\python -m scraper_noticias --solo "Mi Medio" --solo-descubrir --listar
+```
+
+macOS y Linux:
+
+```bash
+.venv/bin/python -m scraper_noticias --solo "Mi Medio" --solo-descubrir --listar
 ```
 
 Debe mostrar notas con fecha reciente. Si salen cero «en periodo» con muchas

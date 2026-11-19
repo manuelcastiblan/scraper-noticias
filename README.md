@@ -19,10 +19,20 @@ agregar medios y los problemas frecuentes.
 
 ## Uso
 
+Windows:
+
 ```powershell
 py -m venv .venv
 .venv\Scripts\python -m pip install -e .
 .venv\Scripts\python -m scraper_noticias --pais CO --buscar "Primo Gay"
+```
+
+macOS y Linux:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -e .
+.venv/bin/python -m scraper_noticias --pais CO --buscar "Primo Gay"
 ```
 
 Si no quieres instalar el paquete, alcanza con las dependencias:
@@ -146,8 +156,16 @@ versiones; sirve para análisis propio, no para republicar.
 
 ## Pruebas
 
+Windows:
+
 ```powershell
 .venv\Scripts\python -m unittest discover -s tests
+```
+
+macOS y Linux:
+
+```bash
+.venv/bin/python -m unittest discover -s tests
 ```
 
 Son sin red: fechas y zona horaria, filtro, lectura de RSS y sitemaps, base local.
