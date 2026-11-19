@@ -1,6 +1,7 @@
 """Acceso HTTP: cabeceras, cortesía por host y robots.txt."""
 from __future__ import annotations
 
+import ssl
 import threading
 import time
 import urllib.error
@@ -10,6 +11,23 @@ import urllib.robotparser
 
 UA_DEFECTO = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
+
+
+def contexto_ssl() -> ssl.SSLContext:
+    """Verificación de certificados con el almacén del sistema más el de certifi.
+
+    En macOS el Python de python.org no trae certificados raíz y toda conexión
+    HTTPS falla con CERTIFICATE_VERIFY_FAILED hasta correr «Install
+    Certificates.command». Sumar el paquete de certifi lo evita sin tocar la
+    máquina. La verificación nunca se desactiva.
+    """
+    ctx = ssl.create_default_context()
+    try:
+        import certifi
+        ctx.load_verify_locations(cafile=certifi.where())
+    except Exception:
+        pass
+    return ctx
 
 
 def dominio(u: str) -> str:
@@ -29,6 +47,7 @@ class Red:
         self._sem: dict[str, threading.Semaphore] = {}
         self._robots: dict[str, urllib.robotparser.RobotFileParser | None] = {}
         self._lock = threading.Lock()
+        self._ssl = contexto_ssl()
 
     def _semaforo(self, host: str) -> threading.Semaphore:
         with self._lock:
@@ -49,7 +68,8 @@ class Red:
             try:
                 for intento in range(3):
                     try:
-                        with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=timeout) as r:
+                        with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=timeout,
+                                                    context=self._ssl) as r:
                             crudo = r.read(max_bytes)
                             cs = r.headers.get_content_charset() or "utf-8"
                         break

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Scraper de noticias de tema libre por RSS y sitemaps, con extracción del cuerpo y búsqueda"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-dependencies = ["trafilatura>=2.0", "feedparser>=6.0", "tzdata"]
+dependencies = ["trafilatura>=2.0", "feedparser>=6.0", "tzdata", "certifi"]
 
 [project.scripts]
 scraper-noticias = "scraper_noticias.cli:main"

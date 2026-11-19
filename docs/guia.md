@@ -51,7 +51,7 @@ el comando `scraper-noticias`, equivalente a `python -m scraper_noticias`.
 .venv\Scripts\python -m unittest discover -s tests
 ```
 
-Deben pasar las 22 pruebas. No usan la red.
+Deben pasar las 23 pruebas. No usan la red.
 
 ## 3. Primera corrida
 
@@ -240,6 +240,22 @@ Opciones de una fuente:
 | `tope = 200` | Máximo de notas por corrida para esa fuente |
 
 ## 9. Problemas frecuentes
+
+**`SSL: CERTIFICATE_VERIFY_FAILED` en todas las fuentes (típico en Mac).** El
+Python que se instala desde python.org en macOS no trae certificados raíz. El
+scraper ya incluye los suyos (paquete `certifi`), así que basta con actualizar:
+
+```bash
+git pull
+```
+
+```bash
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+Si aun así falla, casi siempre es una red que intercepta el tráfico (wifi de
+universidad o empresa, antivirus con «análisis HTTPS»): prueba desde otra red.
+No desactives la verificación de certificados.
 
 **`URLError ... getaddrinfo failed` en una fuente.** Fallo pasajero de DNS, más
 común en Windows cuando se consultan muchos sitios a la vez. El scraper ya

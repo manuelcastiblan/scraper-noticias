@@ -155,6 +155,16 @@ class Base(unittest.TestCase):
             alm.db.close()
 
 
+class Conexion(unittest.TestCase):
+    def test_el_contexto_verifica_y_trae_certificados_propios(self):
+        import ssl
+        from scraper_noticias.red import contexto_ssl
+        ctx = contexto_ssl()
+        self.assertEqual(ctx.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(ctx.check_hostname)
+        self.assertGreater(ctx.cert_store_stats()["x509_ca"], 50)   # el paquete de certifi quedó cargado
+
+
 class Configuracion(unittest.TestCase):
     def test_archivos_de_medios_cargan(self):
         for ruta in [RAIZ / "medios.toml", *sorted((RAIZ / "perfiles").glob("*.toml"))]:
